@@ -14,6 +14,9 @@ inputs:
   AWS_REGION:
     description: 'AWS Region'
     required: true
+  CLUSTER_NAME:
+    description: 'Name of the cluster in ECS'
+    required: true
   SERVICE_NAME:
     description: 'Name of the service deployed to ECS to check for deployed images'
     required: true
