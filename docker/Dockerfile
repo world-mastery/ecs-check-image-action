@@ -6,6 +6,7 @@ LABEL com.github.actions.description="Checks a given image name agains a deploye
 ENV GITHUB_WORKSPACE=/github/workspace
 RUN ln -fs /usr/share/zoneinfo/Europe/Madrid /etc/localtime
 RUN apk add --no-cache python py-pip jq
+RUN apk add --no-cache bash
 
 RUN pip install awscli
 
