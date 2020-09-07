@@ -1,0 +1,25 @@
+name: 'ECS check image Action'
+description: 'Check the current deployed image in ECS against a given image tag'
+author: 'Efren Carles <efrencarles@worldteamproject.com>'
+branding:
+  icon: 'upload-cloud'
+  color: 'yellow'
+inputs:
+  AWS_ACCESS_KEY_ID:
+    description: 'AWS Access Key Id'
+    required: true
+  AWS_SECRET_ACCESS_KEY:
+    description: 'AWS Secret Access Key'
+    required: true
+  AWS_REGION:
+    description: 'AWS Region'
+    required: true
+  SERVICE_NAME:
+    description: 'Name of the service deployed to ECS to check for deployed images'
+    required: true
+  CURRENT_IMAGE:
+    description: 'Tag of the image we want to check if it is deployed'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
