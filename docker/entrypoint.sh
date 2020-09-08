@@ -38,8 +38,6 @@ then
     exit 1
 fi
 
-
-
 ## Set AWS credentials
 export AWS_ACCESS_KEY_ID="${INPUT_AWS_ACCESS_KEY_ID}"
 export AWS_SECRET_ACCESS_KEY="${INPUT_AWS_SECRET_ACCESS_KEY}"
@@ -47,10 +45,15 @@ export AWS_DEFAULT_REGION="${INPUT_AWS_REGION}"
 
 
 FixedInputServiceName=\""${INPUT_SERVICE_NAME}"\"
-ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "${FixedInputServiceName}" ))'`
-echo "${ServiceName}"
-ServiceImages=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}"`
-ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains("${INPUT_CURRENT_IMAGE}"))'`
+echo $FixedInputServiceName
+
+
+ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
+echo "Service name"
+echo $ServiceName
+
+ServiceImages=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName`
+ServiceImageCoincidence=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName | jq '.taskArns[] | select(. | contains("'${INPUT_CURRENT_IMAGE}'"))'`
 
 if [ -z "${ServiceImageCoincidence}"] || [ $("${ServiceImages}" | jq '.[] | length' ) != $("${ServiceImageCoincidence}" | jq '.[] | length') ]
 then
