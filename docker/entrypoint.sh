@@ -9,7 +9,6 @@ fi
 if [[ -z "$INPUT_AWS_SECRET_ACCESS_KEY" ]]
 then
     echo "AWS_SECRET_ACCESS_KEY is missing"
-    env
     exit 1
 fi
 
@@ -43,27 +42,28 @@ export AWS_ACCESS_KEY_ID="${INPUT_AWS_ACCESS_KEY_ID}"
 export AWS_SECRET_ACCESS_KEY="${INPUT_AWS_SECRET_ACCESS_KEY}"
 export AWS_DEFAULT_REGION="${INPUT_AWS_REGION}"
 
-
-FixedInputServiceName=\""${INPUT_SERVICE_NAME}"\"
-echo $FixedInputServiceName
-
-
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
-echo "Service name"
-echo $ServiceName
-
 ServiceImages=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName`
+echo "${ServiceImages}"
+echo "${INPUT_CURRENT_IMAGE}"
 ServiceImageCoincidence=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName | jq '.taskArns[] | select(. | contains("'${INPUT_CURRENT_IMAGE}'"))'`
-
-if [ -z "${ServiceImageCoincidence}"] || [ $("${ServiceImages}" | jq '.[] | length' ) != $("${ServiceImageCoincidence}" | jq '.[] | length') ]
+echo "${ServiceImageCoincidence}"
+if [[ -z "${ServiceImageCoincidence}" ]]
 then
-  echo "Needs Upgrade"
+  echo "Needs update first"
   echo "::set-output name=updated_img::true"
   exit 0
+else
+  if [ $( echo "${ServiceImages}" | jq '.[] | length' ) != $(echo "${ServiceImageCoincidence}" | jq '.[] | length' ) ]
+  then
+    echo "Needs Upgrade second"
+    echo "::set-output name=updated_img::true"
+    exit 0
+  fi
 fi
-  echo "::set-output name=updated_img::false"
-  echo "No needs upgrade"
-  exit 0
+echo "::set-output name=updated_img::false"
+echo "No needs upgrade"
+exit 0
 
 ## First get the ServiceNames
 #aws ecs list-services --cluster cluster-pro > result1.txt
