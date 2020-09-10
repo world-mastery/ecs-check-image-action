@@ -14,7 +14,7 @@ fi
 
 if [[ -z "$AWS_DEFAULT_REGION" ]]
 then
-    echo "AWS_REGION is missing"
+    echo "AWS_DEFAULT_REGION is missing"
     exit 1
 fi
 
