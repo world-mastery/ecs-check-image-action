@@ -44,22 +44,16 @@ export AWS_DEFAULT_REGION="${INPUT_AWS_REGION}"
 
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
 ServiceImages=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName`
-echo "${ServiceImages}"
-echo "${INPUT_CURRENT_IMAGE}"
-ServiceImageCoincidence=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName | jq '.taskArns[] | select(. | contains("'${INPUT_CURRENT_IMAGE}'"))'`
+cat "${INPUT_CURRENT_IMAGE}"
+cat "${ServiceImages}"
+ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ))'`
+echo "echo \"${ServiceImages}\" | jq '.taskArns[] | select(. | contains( \"${INPUT_CURRENT_IMAGE}\" ))'"
 echo "${ServiceImageCoincidence}"
-if [[ -z "${ServiceImageCoincidence}" ]]
+if [ -z "${ServiceImageCoincidence}" ] | [ $( echo "${ServiceImages}" | jq '.[] | length' ) -gt 1 ]
 then
   echo "Needs update first"
   echo "::set-output name=updated_img::true"
   exit 0
-else
-  if [ $( echo "${ServiceImages}" | jq '.[] | length' ) != $(echo "${ServiceImageCoincidence}" | jq '.[] | length' ) ]
-  then
-    echo "Needs Upgrade second"
-    echo "::set-output name=updated_img::true"
-    exit 0
-  fi
 fi
 echo "::set-output name=updated_img::false"
 echo "No needs upgrade"
