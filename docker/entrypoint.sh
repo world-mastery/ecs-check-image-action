@@ -43,44 +43,15 @@ export AWS_SECRET_ACCESS_KEY="${INPUT_AWS_SECRET_ACCESS_KEY}"
 export AWS_DEFAULT_REGION="${INPUT_AWS_REGION}"
 
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
-ServiceImages=`aws ecs list-tasks --cluster $INPUT_CLUSTER_NAME --service-name $ServiceName`
-cat "${INPUT_CURRENT_IMAGE}"
-cat "${ServiceImages}"
-ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ))'`
-echo "echo \"${ServiceImages}\" | jq '.taskArns[] | select(. | contains( \"${INPUT_CURRENT_IMAGE}\" ))'"
-echo "${ServiceImageCoincidence}"
-if [ -z "${ServiceImageCoincidence}" ] | [ $( echo "${ServiceImages}" | jq '.[] | length' ) -gt 1 ]
+ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ) | not)'`
+if [ -z "${ServiceImageCoincidence}" ]
 then
-  echo "Needs update first"
-  echo "::set-output name=updated_img::true"
+  echo "::set-output name=updated_img::false"
+  echo "No needs upgrade"
   exit 0
 fi
-echo "::set-output name=updated_img::false"
-echo "No needs upgrade"
-exit 0
-
-## First get the ServiceNames
-#aws ecs list-services --cluster cluster-pro > result1.txt
-#for((i=0; i< $(jq ' .[] | length' result1.txt ); i++))
-#do
-	#Line=$(cat result1.txt | jq ".serviceArns[$i]")
-	#if [[ "$Line" == *"${INPUT_SERVICE_NAME}"* ]]
-	#then
-	#	Line2=$(echo "$Line" | cut -d "\"" -f 2)
-  #		aws ecs list-tasks --cluster ${INPUT_CLUSTER_NAME} --service-name "$Line2" > result2.txt
-  #		for((j=0; j < $(jq ' .[] | length' result2.txt ); j++))
-  #		do
-	#		if [[ "${INPUT_CURRENT_IMAGE}" != $(cat result2.txt | jq ".taskArns[$j]" | cut -d "\"" -f 2) ]]
-	#		then
-	#			 echo "::set-output name=updated_img::true"
-	#			 echo "Needs update"
-	#			exit 0
-	#		fi
-  #		done
-
-  #	fi
-#done
-#echo "::set-output name=updated_img::false"
-#exit 1
+  echo "Needs update"
+  echo "::set-output name=updated_img::true"
+  exit 0
 
 
