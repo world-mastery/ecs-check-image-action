@@ -1,1 +1,1 @@
-FROM worldmastery/ecs-check-image-action:v0.0.4
+FROM worldmastery/ecs-check-image-action:v0.0.5
