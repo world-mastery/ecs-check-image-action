@@ -38,8 +38,13 @@ then
 fi
 
 ## Set AWS credentials
+echo "The current image is: " ${INPUT_CURRENT_IMAGE}
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
+echo "The Service Name is: "${ServiceName}
+ServiceImages=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}"`
+echo "The service images are: "${ServiceImages}
 ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ) | not)'`
+echo "The image coincidence is: " ${ServiceImageCoincidence}
 if [ -z "${ServiceImageCoincidence}" ]
 then
   echo "::set-output name=updated_img::false"
