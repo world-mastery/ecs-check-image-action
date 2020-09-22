@@ -38,21 +38,21 @@ then
 fi
 
 ## Set AWS credentials
-echo "The current image is: " ${INPUT_CURRENT_IMAGE}
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
-echo "The Service Name is: "${ServiceName}
-ServiceImages=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}"`
-echo "The service images are: "${ServiceImages}
-ServiceImageCoincidence=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq '.taskArns[] | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ) | not)'`
-echo "The image coincidence is: " ${ServiceImageCoincidence}
-if [ -z "${ServiceImageCoincidence}" ]
+echo "The service is: "${ServiceName}
+ServiceArns=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq -c '.taskArns | join(" ")'`
+ServiceArns=`echo "${ServiceArns}" | sed -e 's/^"//' -e 's/"$//'`
+echo "The services arns are: "${ServiceArns}
+Coincidences=`aws ecs describe-tasks --cluster "${INPUT_CLUSTER_NAME}" --tasks "${ServiceArns}" | jq '.tasks[].containers[].image | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ) | not )'`
+echo "The images that differ from the pushed one are: "${Coincidences}
+if [ -z "${Coincidences}" ]
 then
   echo "::set-output name=updated_img::false"
   echo "No needs upgrade"
   exit 0
 fi
   echo "Needs update"
-  echo "::set-output name=updated_img::true"
+  echo "::set-output name=updated_img:true"
   exit 0
 
 
