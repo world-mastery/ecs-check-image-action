@@ -52,7 +52,7 @@ then
   exit 0
 fi
   echo "Needs update"
-  echo "::set-output name=updated_img:true"
+  echo "::set-output name=updated_img::true"
   exit 0
 
 
