@@ -40,7 +40,7 @@ fi
 ## Set AWS credentials
 ServiceName=`aws ecs list-services --cluster "${INPUT_CLUSTER_NAME}" | jq '.serviceArns[] | select(. | contains( "'${INPUT_SERVICE_NAME}'" ))' | cut -d "\"" -f 2 `
 echo "The service is: "${ServiceName}
-ServiceArns=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq -c '.taskArns | join(" ")'`
+ServiceArns=`aws ecs list-tasks --cluster "${INPUT_CLUSTER_NAME}" --service-name "${ServiceName}" | jq -c '.taskArns | join(" ") | gsub("arn:aws:ecs:eu-west-1:145684445275:task/"; "")'`
 ServiceArns=`echo "${ServiceArns}" | sed -e 's/^"//' -e 's/"$//'`
 echo "The services arns are: "${ServiceArns}
 Coincidences=`aws ecs describe-tasks --cluster "${INPUT_CLUSTER_NAME}" --tasks "${ServiceArns}" | jq '.tasks[].containers[].image | select(. | contains( "'${INPUT_CURRENT_IMAGE}'" ) | not )'`
